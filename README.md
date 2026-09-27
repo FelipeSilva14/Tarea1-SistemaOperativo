@@ -71,7 +71,7 @@ Ejemplo:
 
 ## Decisiones de diseño tomadas
 
-* `1) Procesos o Hilos`: Para cumplir con la rúbrica de la tarea no se realizó se omitó el uso de hilos de ejecución para esta tarea. Toda la concurrencia está basada en la creación de procesos independientes utilizando fork() y sincronización mediante waitpid(-1, &estado, 0).  
+* `1) Procesos o Hilos`: Para cumplir con la rúbrica de la tarea no se realizó el uso de hilos de ejecución para esta tarea. Toda la concurrencia está basada en la creación de procesos independientes utilizando fork() y sincronización mediante waitpid(-1, &estado, 0).  
 
 * `2) Paso de Mensajes (Pipes)`: Cada tarea crea una tubería unidireccional (pipe) antes de realizar el fork(). Esto ayuda a que se garantice la comunicación de finalización entre el proceso hijo y el padre de una manera segura y desacoplada.
 
