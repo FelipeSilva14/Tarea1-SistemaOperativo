@@ -41,7 +41,7 @@ int encontrar_id(const char *id) {
 
 void inspeccion_seremi(int sig) {
     (void)sig;
-    printf("\n[SEREMI] ¡Inspección sorpresa! Cancelando todas las actividades...\n");
+    printf("\n[SEREMI] Inspección Seremi. Se cancelan todas las actividades.\n");
     for (int i = 0; i < contador_nodo; i++) {
         if (graph[i].estado == EJECUTANDOSE && graph[i].pid > 0) {
             kill(graph[i].pid, SIGTERM);
@@ -51,7 +51,7 @@ void inspeccion_seremi(int sig) {
 }
 
 int obtener_duracion_random(void) {
-    return (rand() % 4901) + 100; // 100 ms a 5000 ms
+    return (rand() % 4901) + 100; // en esta parte es donde se le otorga 100 ms a 5000 ms de manera random, por si no se le asigna
 }
 
 void Leer_archivo(const char *filename) {
@@ -79,7 +79,7 @@ void Leer_archivo(const char *filename) {
         node->estado = PENDIENTE;
         node->pid = -1;
 
-        line[strcspn(line, "\r\n")] = 0;
+        line[strcspn(line, "\r\n")] = 0; //esto elimina los saltos de linea, para evitar errores
 
         char id_str[MAX_ID_LEN] = {0};
         char nombre_str[MAX_NAME_LEN] = {0};
@@ -87,10 +87,11 @@ void Leer_archivo(const char *filename) {
         char dependencias_str[512] = {0};
 
         int fields = sscanf(line, "%63[^:]:%63[^:]:%31[^:]:%511s", id_str, nombre_str, duracion_str, dependencias_str);
+        //separa las cosas, el id, el nombre, duración y las dependencias
 
         if (fields < 2) continue;
 
-        // Limpieza de espacios en blanco
+        // Limpia espacios en blanco
         sscanf(id_str, " %63s", node->id);
         sscanf(nombre_str, " %63[^\n\r]", node->name);
 
@@ -104,14 +105,14 @@ void Leer_archivo(const char *filename) {
             int parent_cap = 5;
             node->id_padre = malloc(parent_cap * sizeof(char *));
             
-            char *dep = strtok(dependencias_str, ",");
+            char *dep = strtok(dependencias_str, ","); //apunta al primer elemento en una lista de comas
             while (dep) {
                 if (node->contador_padres >= parent_cap) {
                     parent_cap *= 2;
                     node->id_padre = realloc(node->id_padre, parent_cap * sizeof(char *));
                 }
                 
-                // Remover espacios en la dependencia
+                // remueve espacios en las depencencias
                 char clean_dep[MAX_ID_LEN] = {0};
                 sscanf(dep, " %63s", clean_dep);
                 
@@ -130,7 +131,7 @@ void Leer_archivo(const char *filename) {
 void hacer_tarea(NodoTarea *node) {
     signal(SIGINT, SIG_DFL);
 
-    close(node->pipe_fd[0]); // Cerrar extremo de lectura en el hijo
+    close(node->pipe_fd[0]); // cierra el extremo de lectura en el hijo
     printf("[INICIO] Tarea %s (%s) - Duración: %d ms\n", node->id, node->name, node->duracion_ms);
 
     usleep(node->duracion_ms * 1000);
@@ -138,7 +139,7 @@ void hacer_tarea(NodoTarea *node) {
     char msg[128];
     snprintf(msg, sizeof(msg), "COMPLETADO:%s", node->id);
     
-    // Transmisión del mensaje vía Pipe
+    // aca se transmiten los mensajes a través de Pipe
     if (write(node->pipe_fd[1], msg, strlen(msg)) == -1) {
         perror("Error escribiendo en pipe");
     }
@@ -148,7 +149,7 @@ void hacer_tarea(NodoTarea *node) {
     exit(EXIT_SUCCESS);
 }
 
-// Propagación iterativa para evitar overflow con grafos grandes (hasta 10.000 tareas)
+// Propagación iterativa para evitar overflow con grafos grandes
 void cerrar_rama(void) {
     int changed = 1;
     while (changed) {
@@ -187,7 +188,7 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    int K = atoi(argv[2]);
+    int K = atoi(argv[2]);//de texto a entero
     if (K <= 0) {
         fprintf(stderr, "El número K debe ser un entero positivo mayor a 0.\n");
         return EXIT_FAILURE;
@@ -195,8 +196,8 @@ int main(int argc, char *argv[]) {
 
     srand(time(NULL));
 
-    struct sigaction sa;
-    sa.sa_handler = inspeccion_seremi;
+    struct sigaction sa;                   //todo esto es cuando se presiona CTRL+C y que eso llame a la función
+    sa.sa_handler = inspeccion_seremi;     //inspeccion_seremi, de manera que la ejecución se detiene
     sigemptyset(&sa.sa_mask);
     sa.sa_flags = 0;
     sigaction(SIGINT, &sa, NULL);
@@ -228,12 +229,12 @@ int main(int argc, char *argv[]) {
                     hacer_tarea(&graph[i]);
                 } else {
                     graph[i].pid = pid;
-                    close(graph[i].pipe_fd[1]); // Cerrar extremo de escritura en el padre
+                    close(graph[i].pipe_fd[1]); // cierra el extremo de escritura en el padre
                 }
             }
         }
 
-        // Detección de bloqueos o ciclos inalcanzables
+        // detección de bloqueos 
         if (proceso_activo == 0 && !iniciacion) {
             for (int i = 0; i < contador_nodo; i++) {
                 if (graph[i].estado == PENDIENTE) {
@@ -246,7 +247,7 @@ int main(int argc, char *argv[]) {
 
         if (proceso_activo > 0) {
             int estado;
-            pid_t pid_terminado = waitpid(-1, &estado, 0);
+            pid_t pid_terminado = waitpid(-1, &estado, 0); //lee al que ya termino
 
             if (pid_terminado > 0) {
                 proceso_activo--;
@@ -273,7 +274,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    printf("\n¡Ejecución del plan completada!\n");
+    printf("\nEl plan ha sido completado\n");
 
     // Limpieza de memoria asignada dinámicamente
     for (int i = 0; i < contador_nodo; i++) {
