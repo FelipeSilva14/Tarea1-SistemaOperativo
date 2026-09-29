@@ -16,10 +16,10 @@ Este proyecto implementa un **planificador de tareas concurrentes** en C, capaz 
 * Compilador: `gcc`.
 
 ### Compilación
-Para compilar el proyecto es necesario ejecutar en la terminal:
+Para compilar el proyecto se creo un Makefile por lo que se debe ejecutar en la terminal el siguiente comando estando en la carpeta con todos los archivos descargados:
 
 ```bash
-gcc -Wall -Wextra -std=gnu17 tareaSisop.c -o planificador -lpthread
+make
 ```
 ## Modo de uso
 El ejecutable recibe dos argumentos principales: la ruta al archivo de tareas (plan.txt) y un entero positivo $K$ que define el grado máximo de concurrencia de procesos:
